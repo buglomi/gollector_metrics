@@ -1,8 +1,6 @@
 package gollector_metrics
 
 /*
-// int statfs(const char *path, struct statfs *buf);
-
 #include <sys/statvfs.h>
 #include <stdlib.h>
 #include <assert.h>
