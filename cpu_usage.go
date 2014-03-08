@@ -78,6 +78,17 @@ func getJiffyDiff() (int64, int64, error) {
 	return time2 - time1, cpus, nil
 }
 
+/*
+ Obtain the CPUUsage() at the current point. More accurately, it returns a
+ [2]float and error based on two sets of jiffies collection, which is
+ calculated over a second's time and divided by the kernel's HZ value. The
+ float values respectively are the current CPU cores in use and the number of
+ total cores in the system
+
+ Note that because a second is required to gather an accurate value, this
+ invokes time.Sleep and will block any current goroutine while it collects
+ these values.
+*/
 func CPUUsage() ([2]float64, error) {
 	diff, cpus, err := getJiffyDiff()
 
