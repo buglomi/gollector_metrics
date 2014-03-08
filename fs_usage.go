@@ -28,18 +28,6 @@ import (
 	"unsafe"
 )
 
-var SYSTEM_FILESYSTEMS = []string{
-	"proc",
-	"sysfs",
-	"fusectl",
-	"debugfs",
-	"securityfs",
-	"devtmpfs",
-	"devpts",
-	"tmpfs",
-	"fuse",
-}
-
 func FSUsage(path string) interface{} {
 	cPath := C.CString(path)
 	stat := C.go_statvfs(cPath)
