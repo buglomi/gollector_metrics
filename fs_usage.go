@@ -28,6 +28,19 @@ import (
 	"unsafe"
 )
 
+/*
+For a given mountpoint `path`, returns an [4]interface{} tuple containing:
+
+* The free storage on the disk in bytes - this includes root reserved storage.
+
+* The available storage in `path` -- this does not include root's storage.
+
+* The total number of space in `path`.
+
+* True/False based on readonly status for the mount point.
+
+Supplying a directory that is not a mount point results in undefined behavior.
+*/
 func FSUsage(path string) interface{} {
 	cPath := C.CString(path)
 	stat := C.go_statvfs(cPath)
