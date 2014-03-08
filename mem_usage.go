@@ -7,6 +7,22 @@ import (
 	"strings"
 )
 
+/*
+MemoryUsage() returns a map[string]int of keys describing the values and an
+integer with the value in bytes.
+
+Values Are:
+
+* Total: total memory
+
+* Free: free memory
+
+* Used: used memory
+
+* Swap Total: total swap
+
+* Swap Free: available swap
+*/
 func MemoryUsage() (map[string]int, error) {
 	content, err := ioutil.ReadFile("/proc/meminfo")
 
