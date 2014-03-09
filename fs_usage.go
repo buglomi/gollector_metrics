@@ -27,19 +27,20 @@ import (
 )
 
 /*
-For a given mountpoint `path`, returns an [4]interface{} tuple containing:
-
-* The free storage on the disk in bytes - this includes root reserved storage.
-
-* The available storage in `path` -- this does not include root's storage.
-
-* The total number of space in `path`.
-
-* True/False based on readonly status for the mount point.
-
-Supplying a directory that is not a mount point results in undefined behavior.
+Type returned by FSUsage
 */
-func FSUsage(path string) interface{} {
+type FSInfo struct {
+	Free     float64 // The free storage on the disk in bytes - this includes root reserved storage.
+	Avail    uint64  // The available storage in `path` -- this does not include root's storage.
+	Blocks   uint64  // The total number of space in `path`.
+	ReadOnly bool    // True/False based on readonly status for the mount point.
+}
+
+/*
+For a given mountpoint `path`, returns an FSInfo tuple. Supplying a directory
+that is not a mount point results in undefined behavior.
+*/
+func FSUsage(path string) FSInfo {
 	cPath := C.CString(path)
 	stat := C.go_statvfs(cPath)
 	readonly := C.go_fs_readonly(cPath)
@@ -56,10 +57,10 @@ func FSUsage(path string) interface{} {
 		free = math.Ceil(((float64(blocks) - float64(avail)) / float64(blocks)) * 100)
 	}
 
-	return [4]interface{}{
-		free,
-		avail * uint64(stat.f_frsize),
-		blocks * uint64(stat.f_frsize),
-		readonly == 1,
+	return FSInfo{
+		Free:     free,
+		Avail:    avail * uint64(stat.f_frsize),
+		Blocks:   blocks * uint64(stat.f_frsize),
+		ReadOnly: readonly == 1,
 	}
 }
