@@ -16,6 +16,10 @@ import (
 	"strings"
 )
 
+/*
+Aggregates memory usage for many processes with a given command line. Returns a
+uint and error state; if the error is set, usage will be zero.
+*/
 func ProcessMemoryUsage(command string) (uint, error) {
 	total := uint(0)
 	page_size := uint(C.get_pgsz())
