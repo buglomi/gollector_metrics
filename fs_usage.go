@@ -37,7 +37,7 @@ type FSInfo struct {
 }
 
 /*
-For a given mountpoint `path`, returns an FSInfo tuple. Supplying a directory
+For a given mountpoint `path`, returns an FSInfo struct. Supplying a directory
 that is not a mount point results in undefined behavior.
 */
 func FSUsage(path string) FSInfo {
