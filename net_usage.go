@@ -9,8 +9,9 @@ import (
 	"sync"
 )
 
-var net_base_path = "/sys/class/net"
-var file_pattern = filepath.Join(net_base_path, "%s/statistics/")
+const NET_BASE_PATH = "/sys/class/net" // base path of the network device statistics files.
+
+var file_pattern = filepath.Join(NET_BASE_PATH, "%s/statistics/")
 
 var file_map = map[string]string{
 	"rx_bytes":   "Received (Bytes)",
