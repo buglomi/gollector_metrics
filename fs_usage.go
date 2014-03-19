@@ -44,6 +44,7 @@ func FSUsage(path string) FSInfo {
 	cPath := C.CString(path)
 	stat := C.go_statvfs(cPath)
 	readonly := C.go_fs_readonly(cPath)
+	frsize := uint64(stat.f_frsize)
 
 	defer C.free(unsafe.Pointer(stat))
 	defer C.free(unsafe.Pointer(cPath))
@@ -54,13 +55,13 @@ func FSUsage(path string) FSInfo {
 	free := float64(0)
 
 	if avail != 0 {
-		free = math.Ceil(((float64(blocks) - float64(avail)) / float64(blocks)) * 100)
+		free = math.Ceil((float64(blocks) - float64(avail)) * frsize)
 	}
 
 	return FSInfo{
 		Free:     free,
-		Avail:    avail * uint64(stat.f_frsize),
-		Blocks:   blocks * uint64(stat.f_frsize),
+		Avail:    avail * frsize,
+		Blocks:   blocks * frsize,
 		ReadOnly: readonly == 1,
 	}
 }
