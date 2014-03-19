@@ -21,10 +21,12 @@ var file_map = map[string]string{
 	"tx_packets": "Transmitted (Packets)",
 }
 
-var netLastMetrics map[string]map[string]uint64
-var netRWMutex sync.RWMutex
+type NetUsage struct {
+	LastMetrics map[string]map[string]uint64
+	RWMutex     sync.RWMutex
+}
 
-func readFile(base_path string, metric string) (uint64, error) {
+func (nu *NetUsage) readFile(base_path string, metric string) (uint64, error) {
 	out, err := ioutil.ReadFile(filepath.Join(base_path, metric))
 
 	if err != nil {
@@ -41,20 +43,20 @@ Collect statistics on network usage. This call returns zeroes on its first
 invocation and then returns the difference on each successive poll. The device
 must be a valid network device, such as "eth0" or "p2p0".
 */
-func NetUsage(device string) map[string]uint64 {
+func (nu *NetUsage) Metric(device string) map[string]uint64 {
 	new_metrics := false
 
-	if netLastMetrics == nil {
-		netRWMutex.Lock()
-		netLastMetrics = make(map[string]map[string]uint64)
-		netRWMutex.Unlock()
+	if nu.LastMetrics == nil {
+		nu.RWMutex.Lock()
+		nu.LastMetrics = make(map[string]map[string]uint64)
+		nu.RWMutex.Unlock()
 		new_metrics = true
 	}
 
-	if netLastMetrics[device] == nil {
-		netRWMutex.Lock()
-		netLastMetrics[device] = make(map[string]uint64)
-		netRWMutex.Unlock()
+	if nu.LastMetrics[device] == nil {
+		nu.RWMutex.Lock()
+		nu.LastMetrics[device] = make(map[string]uint64)
+		nu.RWMutex.Unlock()
 		new_metrics = true
 	}
 
@@ -64,7 +66,7 @@ func NetUsage(device string) map[string]uint64 {
 	base_path := fmt.Sprintf(file_pattern, device)
 
 	for fn, metric := range file_map {
-		result, err := readFile(base_path, fn)
+		result, err := nu.readFile(base_path, fn)
 		if err == nil {
 			metrics[metric] = result
 		} else {
@@ -75,16 +77,16 @@ func NetUsage(device string) map[string]uint64 {
 	for metric, value := range metrics {
 		if new_metrics {
 			difference[metric] = 0
-			netRWMutex.Lock()
-			netLastMetrics[device][metric] = value
-			netRWMutex.Unlock()
+			nu.RWMutex.Lock()
+			nu.LastMetrics[device][metric] = value
+			nu.RWMutex.Unlock()
 		} else {
-			netRWMutex.RLock()
-			difference[metric] = value - netLastMetrics[device][metric]
-			netRWMutex.RUnlock()
-			netRWMutex.Lock()
-			netLastMetrics[device][metric] = value
-			netRWMutex.Unlock()
+			nu.RWMutex.RLock()
+			difference[metric] = value - nu.LastMetrics[device][metric]
+			nu.RWMutex.RUnlock()
+			nu.RWMutex.Lock()
+			nu.LastMetrics[device][metric] = value
+			nu.RWMutex.Unlock()
 		}
 
 	}
