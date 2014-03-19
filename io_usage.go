@@ -21,9 +21,10 @@ const (
 	LINE_FIRST_METRIC uint = 3
 )
 
-var device_to_diskstat_id = map[uint]uint{
-	DEVICE_DISK: 8,
-	DEVICE_DM:   252,
+// a map of devices to disk identifiers
+var DeviceMap = map[uint]uint{
+	DEVICE_DISK: 8,   // an actual disk
+	DEVICE_DM:   252, // a devicemapper disk
 }
 
 var metric_names = []string{
@@ -51,10 +52,10 @@ func (io *IOUsage) getDeviceType(device_name string) uint {
 	matched, _ := regexp.Match("^dm-", byte_dn)
 
 	if matched {
-		return device_to_diskstat_id[DEVICE_DM]
+		return DeviceMap[DEVICE_DM]
 	}
 
-	return device_to_diskstat_id[DEVICE_DISK]
+	return DeviceMap[DEVICE_DISK]
 }
 
 func (io *IOUsage) initLastMetrics(device string) (new_metrics bool) {
