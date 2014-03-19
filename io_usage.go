@@ -40,8 +40,8 @@ var metric_names = []string{
 	"weighted io time (ms)",
 }
 
-var memLastMetrics map[string]map[string]uint64
-var memRWMutex sync.RWMutex
+var ioLastMetrics map[string]map[string]uint64
+var ioRWMutex sync.RWMutex
 
 func getDeviceType(device_name string) uint {
 	byte_dn := []byte(device_name)
@@ -58,17 +58,17 @@ func getDeviceType(device_name string) uint {
 func initLastMetrics(device string) (new_metrics bool) {
 	new_metrics = false
 
-	if memLastMetrics == nil {
-		memRWMutex.Lock()
-		memLastMetrics = make(map[string]map[string]uint64)
-		memRWMutex.Unlock()
+	if ioLastMetrics == nil {
+		ioRWMutex.Lock()
+		ioLastMetrics = make(map[string]map[string]uint64)
+		ioRWMutex.Unlock()
 		new_metrics = true
 	}
 
-	if memLastMetrics[device] == nil {
-		memRWMutex.Lock()
-		memLastMetrics[device] = make(map[string]uint64)
-		memRWMutex.Unlock()
+	if ioLastMetrics[device] == nil {
+		ioRWMutex.Lock()
+		ioLastMetrics[device] = make(map[string]uint64)
+		ioRWMutex.Unlock()
 		new_metrics = true
 	}
 
@@ -76,15 +76,15 @@ func initLastMetrics(device string) (new_metrics bool) {
 }
 
 func writeMetric(device string, metric string, value uint64) {
-	memRWMutex.Lock()
-	memLastMetrics[device][metric] = value
-	memRWMutex.Unlock()
+	ioRWMutex.Lock()
+	ioLastMetrics[device][metric] = value
+	ioRWMutex.Unlock()
 }
 
 func readMetric(device string, metric string) (value uint64) {
-	memRWMutex.RLock()
-	value = memLastMetrics[device][metric]
-	memRWMutex.RUnlock()
+	ioRWMutex.RLock()
+	value = ioLastMetrics[device][metric]
+	ioRWMutex.RUnlock()
 
 	return value
 }
