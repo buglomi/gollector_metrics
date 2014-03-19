@@ -22,7 +22,6 @@ int go_fs_readonly(const char *path) {
 import "C"
 
 import (
-	"math"
 	"unsafe"
 )
 
@@ -30,10 +29,10 @@ import (
 Type returned by FSUsage
 */
 type FSInfo struct {
-	Free     float64 // The free storage on the disk in bytes - this includes root reserved storage.
-	Avail    uint64  // The available storage in `path` -- this does not include root's storage.
-	Blocks   uint64  // The total number of space in `path`.
-	ReadOnly bool    // True/False based on readonly status for the mount point.
+	Free     uint64 // The free storage on the disk in megabytes - this includes root reserved storage.
+	Avail    uint64 // The available storage in `path` -- this does not include root's storage.
+	Blocks   uint64 // The total number of space in `path`.
+	ReadOnly bool   // True/False based on readonly status for the mount point.
 }
 
 /*
@@ -51,15 +50,10 @@ func FSUsage(path string) FSInfo {
 
 	blocks := uint64(stat.f_blocks)
 	avail := uint64(stat.f_bavail)
-
-	free := float64(0)
-
-	if avail != 0 {
-		free = math.Ceil((float64(blocks) - float64(avail)) * float64(frsize))
-	}
+	free := uint64(stat.f_bfree)
 
 	return FSInfo{
-		Free:     free,
+		Free:     free * frsize,
 		Avail:    avail * frsize,
 		Blocks:   blocks * frsize,
 		ReadOnly: readonly == 1,
