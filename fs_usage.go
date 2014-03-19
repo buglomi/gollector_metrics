@@ -55,7 +55,7 @@ func FSUsage(path string) FSInfo {
 	free := float64(0)
 
 	if avail != 0 {
-		free = math.Ceil((float64(blocks) - float64(avail)) * frsize)
+		free = math.Ceil((float64(blocks) - float64(avail)) * float64(frsize))
 	}
 
 	return FSInfo{
