@@ -40,10 +40,12 @@ var metric_names = []string{
 	"weighted io time (ms)",
 }
 
-var ioLastMetrics map[string]map[string]uint64
-var ioRWMutex sync.RWMutex
+type IOUsage struct {
+	LastMetrics map[string]map[string]uint64
+	RWMutex     sync.RWMutex
+}
 
-func getDeviceType(device_name string) uint {
+func (io *IOUsage) getDeviceType(device_name string) uint {
 	byte_dn := []byte(device_name)
 
 	matched, _ := regexp.Match("^dm-", byte_dn)
@@ -55,41 +57,41 @@ func getDeviceType(device_name string) uint {
 	return device_to_diskstat_id[DEVICE_DISK]
 }
 
-func initLastMetrics(device string) (new_metrics bool) {
+func (io *IOUsage) initLastMetrics(device string) (new_metrics bool) {
 	new_metrics = false
 
-	if ioLastMetrics == nil {
-		ioRWMutex.Lock()
-		ioLastMetrics = make(map[string]map[string]uint64)
-		ioRWMutex.Unlock()
+	if io.LastMetrics == nil {
+		io.RWMutex.Lock()
+		io.LastMetrics = make(map[string]map[string]uint64)
+		io.RWMutex.Unlock()
 		new_metrics = true
 	}
 
-	if ioLastMetrics[device] == nil {
-		ioRWMutex.Lock()
-		ioLastMetrics[device] = make(map[string]uint64)
-		ioRWMutex.Unlock()
+	if io.LastMetrics[device] == nil {
+		io.RWMutex.Lock()
+		io.LastMetrics[device] = make(map[string]uint64)
+		io.RWMutex.Unlock()
 		new_metrics = true
 	}
 
 	return new_metrics
 }
 
-func writeMetric(device string, metric string, value uint64) {
-	ioRWMutex.Lock()
-	ioLastMetrics[device][metric] = value
-	ioRWMutex.Unlock()
+func (io *IOUsage) writeMetric(device string, metric string, value uint64) {
+	io.RWMutex.Lock()
+	io.LastMetrics[device][metric] = value
+	io.RWMutex.Unlock()
 }
 
-func readMetric(device string, metric string) (value uint64) {
-	ioRWMutex.RLock()
-	value = ioLastMetrics[device][metric]
-	ioRWMutex.RUnlock()
+func (io *IOUsage) readMetric(device string, metric string) (value uint64) {
+	io.RWMutex.RLock()
+	value = io.LastMetrics[device][metric]
+	io.RWMutex.RUnlock()
 
 	return value
 }
 
-func getDiskMetrics(device string, device_type uint) (retval map[string]uint64, err error) {
+func (io *IOUsage) getDiskMetrics(device string, device_type uint) (retval map[string]uint64, err error) {
 	out, err := ioutil.ReadFile(DISKSTATS_FILE)
 
 	if err != nil {
@@ -134,15 +136,11 @@ collected since the last run, and this will continue for successive calls.
 
 The device used must be a *real* disk. No tmpfs, procfs, etc.
 */
-func IOUsage(device string) (map[string]uint64, error) {
+func (io *IOUsage) Metric(device string) (map[string]uint64, error) {
 	difference := make(map[string]uint64)
-	device_type := getDeviceType(device)
-	new_metrics := initLastMetrics(device)
-	metrics, err := getDiskMetrics(device, device_type)
-
-	/*if new_metrics {*/
-	/*log.Log("debug", "New metrics, sending zeroes")*/
-	/*}*/
+	device_type := io.getDeviceType(device)
+	new_metrics := io.initLastMetrics(device)
+	metrics, err := io.getDiskMetrics(device, device_type)
 
 	if err != nil {
 		return nil, err
@@ -152,13 +150,13 @@ func IOUsage(device string) (map[string]uint64, error) {
 		if new_metrics {
 			difference[metric] = 0
 		} else {
-			difference[metric] = value - readMetric(device, metric)
-			if int64(value-readMetric(device, metric)) < 0 {
+			difference[metric] = value - io.readMetric(device, metric)
+			if int64(value-io.readMetric(device, metric)) < 0 {
 				difference[metric] = 0
 			}
 		}
 
-		writeMetric(device, metric, value)
+		io.writeMetric(device, metric, value)
 	}
 
 	return difference, nil
