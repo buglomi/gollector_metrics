@@ -29,11 +29,11 @@ import (
 Type returned by FSUsage
 */
 type FSInfo struct {
-	Free     uint64 // The free storage on the disk in megabytes - this includes root reserved storage.
-	Avail    uint64 // The available storage in `path` -- this does not include root's storage.
-	Blocks   uint64 // The total number of space in `path`.
-	ReadOnly bool   // True/False based on readonly status for the mount point.
-  Percent  floati64  // Percentage of free storage in `path`.
+	Free     uint64  // The free storage on the disk in megabytes - this includes root reserved storage.
+	Avail    uint64  // The available storage in `path` -- this does not include root's storage.
+	Blocks   uint64  // The total number of space in `path`.
+	ReadOnly bool    // True/False based on readonly status for the mount point.
+	Percent  float64 // Percentage of free storage in `path`.
 }
 
 /*
@@ -58,6 +58,6 @@ func FSUsage(path string) FSInfo {
 		Avail:    avail * frsize,
 		Blocks:   blocks * frsize,
 		ReadOnly: readonly == 1,
-    Percent:  float64(free * frsize) / float64(blocks * frsize),
+		Percent:  float64(free*frsize) / float64(blocks*frsize),
 	}
 }
