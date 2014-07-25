@@ -58,6 +58,6 @@ func FSUsage(path string) FSInfo {
 		Avail:    avail * frsize,
 		Blocks:   blocks * frsize,
 		ReadOnly: readonly == 1,
-		Percent:  float64(free*frsize) / float64(blocks*frsize),
+		Percent:  100 - (100 * float64(free*frsize) / float64(blocks*frsize)),
 	}
 }
