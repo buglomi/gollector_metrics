@@ -31,30 +31,33 @@ func ProcessMemoryUsage(command string) (uint, error) {
 	}
 
 	for _, pid := range pids {
-		path := "/proc/" + pid + "/statm"
-		f, err := os.Open(path)
-
-		if err != nil {
-			return 0, fmt.Errorf("Could not open " + path + ": " + err.Error())
-		}
-
-		defer f.Close()
-
-		content, err := ioutil.ReadAll(f)
-
-		if err != nil {
-			return 0, fmt.Errorf("Could not read from " + path + ": " + err.Error())
-		}
-
-		parts := strings.Split(string(content), " ")
-		mem, err := strconv.Atoi(parts[1])
-
-		if err != nil {
-			return 0, fmt.Errorf("Trouble converting resident size " + parts[1] + " to integer: " + err.Error())
-		}
-
-		total += uint(mem) * page_size
+		total += PIDMemoryUsage(pid)
 	}
 
 	return total, nil
+}
+
+func PIDMemoryUsage(pid string) (uint, error) {
+	path := "/proc/" + pid + "/statm"
+	f, err := os.Open(path)
+
+	if err != nil {
+		return 0, fmt.Errorf("Could not open " + path + ": " + err.Error())
+	}
+
+	defer f.Close()
+
+	content, err := ioutil.ReadAll(f)
+
+	if err != nil {
+		return 0, fmt.Errorf("Could not read from " + path + ": " + err.Error())
+	}
+
+	parts := strings.Split(string(content), " ")
+	mem, err := strconv.Atoi(parts[1])
+
+	if err != nil {
+		return 0, fmt.Errorf("Trouble converting resident size " + parts[1] + " to integer: " + err.Error())
+	}
+	return mem
 }
