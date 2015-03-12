@@ -53,11 +53,18 @@ func FSUsage(path string) FSInfo {
 	avail := uint64(stat.f_bavail)
 	free := uint64(stat.f_bfree)
 
+        var usedPercent float64
+        if blocks == 0 || frsize == 0 {
+		usedPercent = 100
+	} else {
+		usedPercent = (100 * float64(free*frsize) / float64(blocks*frsize))
+        }
+
 	return FSInfo{
 		Free:     free * frsize,
 		Avail:    avail * frsize,
 		Blocks:   blocks * frsize,
 		ReadOnly: readonly == 1,
-		Percent:  100 - (100 * float64(free*frsize) / float64(blocks*frsize)),
+		Percent:  100 - usedPercent,
 	}
 }
